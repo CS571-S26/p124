@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Form } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 function FavoritesPage() {
+    const navigate = useNavigate();
+
     const [favorites, setFavorites] = useState([]);
     const [ratings, setRatings] = useState({});
     const [sortBy, setSortBy] = useState("default");
 
-    // Load saved books + ratings
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem("favorites")) || [];
         const savedRatings = JSON.parse(localStorage.getItem("ratings")) || {};
@@ -15,46 +17,42 @@ function FavoritesPage() {
         setRatings(savedRatings);
     }, []);
 
-    // Remove book
-    const removeBook = (id) => {
+    const removeBook = (title) => {
         setFavorites(prev => {
-            const updated = prev.filter(book => book.id !== id);
+            const updated = prev.filter(book => book.title !== title);
             localStorage.setItem("favorites", JSON.stringify(updated));
             return updated;
         });
 
         setRatings(prev => {
-            const updatedRatings = { ...prev };
-            delete updatedRatings[id];
-            localStorage.setItem("ratings", JSON.stringify(updatedRatings));
-            return updatedRatings;
+            const updated = { ...prev };
+            delete updated[title];
+            localStorage.setItem("ratings", JSON.stringify(updated));
+            return updated;
         });
     };
 
-    // Update rating
-    const updateRating = (id, value) => {
+    const updateRating = (title, value) => {
         setRatings(prev => {
             const updated = {
                 ...prev,
-                [id]: value
+                [title]: value
             };
             localStorage.setItem("ratings", JSON.stringify(updated));
             return updated;
         });
     };
 
-    // SORT LOGIC
+    const openBook = (book) => {
+        navigate("/book", { state: { book } });
+    };
+
     const sortedFavorites = [...favorites].sort((a, b) => {
-        const ratingA = ratings[a.id] || 0;
-        const ratingB = ratings[b.id] || 0;
+        const ratingA = ratings[a.title] || 0;
+        const ratingB = ratings[b.title] || 0;
 
-        if (sortBy === "rating-high") {
-            return ratingB - ratingA;
-        }
-
-        if (sortBy === "rating-low") {
-            return ratingA - ratingB;
-        }
+        if (sortBy === "rating-high") return ratingB - ratingA;
+        if (sortBy === "rating-low") return ratingA - ratingB;
 
         if (sortBy === "title-az") {
             return (a.title || "").localeCompare(b.title || "");
@@ -71,7 +69,6 @@ function FavoritesPage() {
         <Container className="my-4 pb-5">
             <h1 className="mb-3">Your Favorites</h1>
 
-            {/* SORT DROPDOWN */}
             <Form.Group className="mb-3" style={{ maxWidth: "250px" }}>
                 <Form.Label>Sort By</Form.Label>
                 <Form.Select
@@ -90,11 +87,18 @@ function FavoritesPage() {
                 <p>No books saved yet.</p>
             ) : (
                 <Row>
-                    {sortedFavorites.map(book => (
-                        <Col key={book.id} xs={12} md={6} lg={4} className="mb-3">
-                            <Card className="h-100 shadow-sm">
-
-                                {/* COVER */}
+                    {sortedFavorites.map((book, index) => (
+                        <Col
+                            key={`${book.title}-${index}`}
+                            xs={12}
+                            md={6}
+                            lg={4}
+                            className="mb-3"
+                        >
+                            <Card
+                                className="book-card h-100 shadow-sm"
+                                onClick={() => openBook(book)}
+                            >
                                 <Card.Img
                                     src={book.imageLinks?.thumbnail}
                                     alt={book.title || "Book cover"}
@@ -107,13 +111,12 @@ function FavoritesPage() {
                                         {book.authors?.join(", ") || "Unknown Author"}
                                     </Card.Subtitle>
 
-                                    {/* RATING */}
-                                    <Form.Group className="mb-2">
+                                    <Form.Group className="mb-2" onClick={(e) => e.stopPropagation()}>
                                         <Form.Label>Rating (1–10)</Form.Label>
                                         <Form.Select
-                                            value={ratings[book.id] || ""}
+                                            value={ratings[book.title] || ""}
                                             onChange={(e) =>
-                                                updateRating(book.id, Number(e.target.value))
+                                                updateRating(book.title, Number(e.target.value))
                                             }
                                         >
                                             <option value="">Not rated</option>
@@ -125,10 +128,12 @@ function FavoritesPage() {
                                         </Form.Select>
                                     </Form.Group>
 
-                                    {/* REMOVE BUTTON */}
                                     <Button
                                         variant="danger"
-                                        onClick={() => removeBook(book.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeBook(book.title);
+                                        }}
                                     >
                                         Remove
                                     </Button>

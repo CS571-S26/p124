@@ -16,6 +16,7 @@ function NavigationBar() {
                     <Nav.Link as = {Link} to="/"  onClick = {() => setQuery("")}>Home</Nav.Link>
                     <Nav.Link as = {Link} to="/favorites">Favorites</Nav.Link>
                     <Nav.Link as = {Link} to="/saved">Saved</Nav.Link>
+                    <Nav.Link as = {Link} to="/random">Random</Nav.Link>
                 </Nav>
             </Container>
         </Navbar>

@@ -8,7 +8,6 @@ function FullBookView() {
 
     const book = state?.book;
 
-    // If no book is passed, avoid crashes
     if (!book) {
         return (
             <Container className="mt-4">
@@ -23,37 +22,34 @@ function FullBookView() {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
 
-    // Sync state with localStorage whenever book changes
     useEffect(() => {
         const favs = JSON.parse(localStorage.getItem("favorites")) || [];
         const savedBooks = JSON.parse(localStorage.getItem("savedBooks")) || [];
 
-        setIsFavorite(favs.some(b => b.id === book.id));
-        setIsSaved(savedBooks.some(b => b.id === book.id));
-    }, [book.id]);
+        setIsFavorite(favs.some(b => b.title === book.title));
+        setIsSaved(savedBooks.some(b => b.title === book.title));
+    }, [book.title]);
 
-    // Toggle favorite
     const toggleFavorite = () => {
         const favs = JSON.parse(localStorage.getItem("favorites")) || [];
 
-        const exists = favs.some(b => b.id === book.id);
+        const exists = favs.some(b => b.title === book.title);
 
         const updated = exists
-            ? favs.filter(b => b.id !== book.id)
+            ? favs.filter(b => b.title !== book.title)
             : [...favs, book];
 
         localStorage.setItem("favorites", JSON.stringify(updated));
         setIsFavorite(!exists);
     };
 
-    // Toggle saved
     const toggleSaved = () => {
         const saved = JSON.parse(localStorage.getItem("savedBooks")) || [];
 
-        const exists = saved.some(b => b.id === book.id);
+        const exists = saved.some(b => b.title === book.title);
 
         const updated = exists
-            ? saved.filter(b => b.id !== book.id)
+            ? saved.filter(b => b.title !== book.title)
             : [...saved, book];
 
         localStorage.setItem("savedBooks", JSON.stringify(updated));
@@ -69,7 +65,6 @@ function FullBookView() {
             </Button>
 
             <Row>
-                {/* Cover */}
                 <Col md={4}>
                     <Card>
                         <Card.Img
@@ -79,16 +74,13 @@ function FullBookView() {
                     </Card>
                 </Col>
 
-                {/* Main Info */}
                 <Col md={8}>
                     <h2>{info.title}</h2>
 
-                    {/* ACTION BUTTONS */}
                     <div className="d-flex gap-2 mb-3">
                         <Button
                             variant={isFavorite ? "danger" : "outline-danger"}
                             onClick={toggleFavorite}
-                            aria-label="Toggle favorite"
                         >
                             {isFavorite ? "♥ Favorited" : "♡ Favorite"}
                         </Button>
@@ -96,7 +88,6 @@ function FullBookView() {
                         <Button
                             variant={isSaved ? "success" : "outline-success"}
                             onClick={toggleSaved}
-                            aria-label="Toggle saved"
                         >
                             {isSaved ? "✓ Saved" : "+ Want to Read"}
                         </Button>
@@ -112,7 +103,6 @@ function FullBookView() {
 
                     <hr />
 
-                    {/* Publication Info */}
                     <h5>Publication Info</h5>
                     <ListGroup className="mb-3">
                         <ListGroup.Item>
@@ -126,7 +116,6 @@ function FullBookView() {
                         </ListGroup.Item>
                     </ListGroup>
 
-                    {/* Details */}
                     <h5>Details</h5>
                     <ListGroup className="mb-3">
                         <ListGroup.Item>
@@ -138,7 +127,6 @@ function FullBookView() {
                         </ListGroup.Item>
                     </ListGroup>
 
-                    {/* Ratings */}
                     <h5>Ratings</h5>
                     <ListGroup className="mb-3">
                         <ListGroup.Item>
@@ -155,7 +143,6 @@ function FullBookView() {
                         </ListGroup.Item>
                     </ListGroup>
 
-                    {/* ISBN */}
                     <h5>ISBN</h5>
                     <ListGroup className="mb-3">
                         <ListGroup.Item>
@@ -171,7 +158,6 @@ function FullBookView() {
                         </ListGroup.Item>
                     </ListGroup>
 
-                    {/* External Links */}
                     <h5>External Links</h5>
                     <div className="d-flex gap-2">
                         {info.previewLink && (

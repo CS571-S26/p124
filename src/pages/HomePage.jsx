@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Container, Row, Col, Pagination, Button } from 'react-bootstrap';
 
 import SearchBar from '../components/SearchBar';
@@ -28,6 +28,24 @@ function HomePage() {
 
     const API_KEY = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY;
 
+    const filterRef = useRef(null);
+
+    const randomIndex = () => Math.floor(Math.random() * 40);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setShowFilters(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     useEffect(() => {
         if (!query) return;
         
@@ -53,7 +71,16 @@ function HomePage() {
         fetch(url)
         .then(res => res.json())
         .then(data => {
-            setBooks(data.items || []);
+            let items = data.items || [];
+            if (filters.orderBy === "newest") {
+                items = items.sort((a, b) => {
+                    const dateA = new Date(a.volumeInfo.publishedDate || 0);
+                    const dateB = new Date(b.volumeInfo.publishedDate || 0);
+                    return dateB - dateA;
+                });
+            }
+
+            setBooks(items);
             setLoading(false);
         })
         .catch(err => {
@@ -64,25 +91,25 @@ function HomePage() {
     }, [query, filters, API_KEY])
 
     useEffect(() => {
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:fiction&orderBy=relevance&maxResults=8&key=${API_KEY}`)
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:fiction&orderBy=relevance&maxResults=8&startIndex=${randomIndex()}&key=${API_KEY}`)
             .then(res => res.json())
             .then(data => setFiction(data.items || []));
     }, [API_KEY]);
 
     useEffect(() => {
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:fantasy&orderBy=relevance&maxResults=8&key=${API_KEY}`)
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:fantasy&orderBy=relevance&maxResults=8&startIndex=${randomIndex()}&key=${API_KEY}`)
             .then(res => res.json())
             .then(data => setFantasy(data.items || []));
     }, [API_KEY]);
 
     useEffect(() => {
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:mystery&orderBy=relevance&maxResults=8&key=${API_KEY}`)
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:mystery&orderBy=relevance&maxResults=8&startIndex=${randomIndex()}&key=${API_KEY}`)
             .then(res => res.json())
             .then(data => setMystery(data.items || []));
     }, [API_KEY]);
 
     useEffect(() => {
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:science%20fiction&orderBy=relevance&maxResults=8&key=${API_KEY}`)
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=subject:science%20fiction&orderBy=relevance&maxResults=8&startIndex=${randomIndex()}&key=${API_KEY}`)
             .then(res => res.json())
             .then(data => setScifi(data.items || []))
             .catch(err => {
@@ -97,10 +124,12 @@ function HomePage() {
                 <Row className="justify-content-center px-0">
                     <Col xs={12} md={10} lg={8}>
                         <div className="d-flex align-items-center w-100 gap-2">
-                            <div className="position-relative">
+
+                            <div className="position-relative" ref={filterRef}>
                                 <Button variant="primary" onClick={() => setShowFilters(!showFilters)}>
                                     Filters
                                 </Button>
+
                                 {showFilters && (
                                     <div className="filter-popup">
                                         <FilterPanel
@@ -110,13 +139,16 @@ function HomePage() {
                                     </div>
                                 )}
                             </div>
+
                             <div className="flex-grow-1">
                                 <SearchBar/>
                             </div>
+
                         </div>
                     </Col>
                 </Row>
             </Container>
+
             {isSearching ? (
                 <Container>
                     {loading ? (<h4>Loading...</h4>) : (
@@ -154,6 +186,7 @@ function HomePage() {
                             ))}
                         </div>
                     </div>
+
                     <div className="genre-section">
                         <h3 className="genre-title">Fantasy</h3>
                         <div className="horizontal-scroll">
@@ -169,6 +202,7 @@ function HomePage() {
                             ))}
                         </div>
                     </div>
+
                     <div className="genre-section">
                         <h3 className="genre-title">Mystery</h3>
                         <div className="horizontal-scroll">
@@ -184,6 +218,7 @@ function HomePage() {
                             ))}
                         </div>
                     </div>
+
                     <div className="genre-section">
                         <h3 className="genre-title">Science Fiction</h3>
                         <div className="horizontal-scroll">
@@ -202,7 +237,6 @@ function HomePage() {
                 </>
             )}
         </div>
-        
     );
 }
 
