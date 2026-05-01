@@ -1,12 +1,17 @@
 import { Card } from 'react-bootstrap';
+import { useNavigate } from "react-router-dom";
 
 function BookCard(props) {
-
+    const navigate = useNavigate();
     return(
-        <Card className="shadow-sm rounded" style={{ width: '18rem', margin: '1rem', transition: 'transform 0.2s', cursor: 'pointer' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <Card.Img src = {props.volumeInfo.imageLinks?.thumbnail} style={{objectFit: 'cover' }}></Card.Img>
+        <Card className="shadow-sm rounded" style={{ 
+            transition: 'transform 0.2s',
+            cursor: 'pointer',
+            height: '100%' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            onClick={() => navigate("/book", { state: { book: props.volumeInfo } })}>
+            <Card.Img src = {props.volumeInfo.imageLinks?.thumbnail} style={{objectFit: 'cover' }} alt={`Cover of ${props.title}`}></Card.Img>
             <Card.Body>
                 <Card.Title style={{ 
                     fontSize: '0.9rem', 
